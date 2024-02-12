@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+
+  # PHP Service
+  php:
+    build: './php_docker/'
+    volumes:
+      - ./www/:/var/www/html/
+
+  # Apache Service
+  apache:
+    build: './apache_docker/'
+    depends_on:
+      - php
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./www/:/var/www/html/
+
+  db:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: projecte2
+      MYSQL_DATABASE: bbdduniversitat
+      MYSQL_USER: sergibernat
+      MYSQL_PASSWORD: projecte2
+    ports:
+      - "3306:3306"
+    command: ["--init-file", "/docker-entrypoint-initdb.d/proyecto.sql"]
+    volumes:
+      - ./sql_database/proyecto.sql:/docker-entrypoint-initdb.d/proyecto.sql
+      - dbdata:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    depends_on:
+      - db
+    restart: always
+    ports:
+      - 8081:80
+    volumes:
+      - phpmyadmin_data:/hola
+
+volumes:
+  dbdata:
+  phpmyadmin_data:
